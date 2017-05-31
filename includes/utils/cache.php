@@ -1,4 +1,23 @@
 <?php
+/*
+This file is part of ConnectedWeb
+
+ConnectedWeb is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Connected Web is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with ConnectedWeb.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+defined('ABSPATH') or die('OwO');
+
 class cache_entry
 {
     public $lastwrite;
@@ -30,7 +49,9 @@ function post_cache_get($id, $lastwrite)
 
 function post_cache_init()
 {
-    wp_cache_add('ids', [], 'cweb');
+    if (!wp_cache_get('ids', 'cweb')) {
+        wp_cache_set('ids', array(), 'cweb');
+    }
 }
 
 function _post_cache_track_id($id)
