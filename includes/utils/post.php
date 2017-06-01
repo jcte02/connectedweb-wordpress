@@ -53,6 +53,11 @@ function get_ids_array($match)
     return array_map('intval', explode(',', $match));
 }
 
+function get_id_from_url($url)
+{
+    return attachment_url_to_postid($url) ? : url_to_postid($url);
+}
+
 function get_element($element)
 {
     $parse_tag = '/<([\w-]+) data="(.+)" (.*)\/>/';
@@ -63,9 +68,9 @@ function get_element($element)
         case 'image':
             return get_image(intval($matches[2]));
         case 'video':
-            return get_video(attachment_url_to_postid($matches[2]));
+            return get_video(get_id_from_url($matches[2]));
         case 'audio':
-            return get_audio(attachment_url_to_postid($matches[2]));
+            return get_audio(get_id_from_url($matches[2]));
         case 'anchor':
             $id = attachment_url_to_postid($matches[2]);
             if ($id != 0 && get_post($id)->post_type == 'attachment') {
