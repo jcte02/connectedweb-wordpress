@@ -55,7 +55,9 @@ register_activation_hook(__FILE__, function () {
 });
 
 register_deactivation_hook(__FILE__, function () {
-    unregister_setting('connectedweb', 'blog_keywords');
+    unregister_setting('connectedweb', 'use_popular_tags');
+    unregister_setting('connectedweb', 'custom_keywords');
+    unregister_setting('connectedweb', 'use_default_cache');
     unregister_setting('connectedweb', 'can_cache');
     unregister_setting('connectedweb', 'cache_expire_milliseconds');
     
@@ -65,17 +67,42 @@ register_deactivation_hook(__FILE__, function () {
 register_uninstall_hook(__FILE__, 'connectedweb_uninstall');
 function connectedweb_uninstall()
 {
-    delete_option('blog_keywords');
+    delete_option('use_popular_tags');
+    delete_option('custom_keywords');
+    delete_option('use_default_cache');
     delete_option('can_cache');
     delete_option('cache_expire_milliseconds');
 }
 
+add_action('admin_enqueue_scripts', function () {
+    wp_enqueue_script('jquery-core');
+    // wp_enqueue_script('jquery-effects-core');
+    // wp_enqueue_script('jquery-effects-slide');
+    wp_enqueue_style('onoff', plugins_url('admin/css/onoff.css', __FILE__));
+});
+
+require_once('includes/output/onoff.php');
+
 add_action('admin_init', function () {
-    register_setting('connectedweb', 'blog_keywords', array(
+    register_setting('connectedweb', 'use_popular_tags', array(
+        'type' => 'int',
+        'description' => 'Wheter to use popular tags as feed keywords',
+        'sanitize_callback' => 'intval',
+        'default' => 1
+    ));
+
+    register_setting('connectedweb', 'custom_keywords', array(
         'type' => 'string',
-        'description' => 'Blog keywords (separated by comma)',
+        'description' => 'Custom keywords (separated by comma)',
         'sanitize_callback' => 'sanitize_text_field',
         'default' => ''
+    ));
+
+    register_setting('connectedweb', 'use_default_cache', array(
+        'type' => 'int',
+        'description' => 'Wheter to use default cache settings',
+        'sanitize_callback' => 'intval',
+        'default' => 1
     ));
 
     register_setting('connectedweb', 'can_cache', array(
@@ -98,33 +125,49 @@ add_action('admin_init', function () {
     add_settings_section('connectedweb-cache', 'Cache Settings', function () {
     }, 'connectedweb');
 
-    add_settings_field('blog_keywords', 'Blog keywords (separated by comma)', function () {
+    add_settings_field('use_popular_tags', 'Use popular tags as keywords', function () {
+        onoff_switch('use_popular_tags', 'custom_keywords');
+    }, 'connectedweb', 'connectedweb-feed', array(
+        'label_for' => 'use_popular_tags'
+    ));
+
+    add_settings_field('custom_keywords', 'Custom keywords (separated by comma)', function () {
         ?>
-        <input type="text" name="blog_keywords" value="<?php echo esc_attr(get_option('blog_keywords')); ?>" />
+        <input type="text" name="custom_keywords" id="custom_keywords"
+                pattern="(\w{3,},?\s?){1,5}" 
+                value="<?php echo esc_attr(get_option('custom_keywords')); ?>" 
+                <?php required(get_option('use_popular_tags', 1)) ?> />
         <?php
 
-    }, 'connectedweb', 'connectedweb-feed', array('laber_for' => 'blog_keywords'));
+    }, 'connectedweb', 'connectedweb-feed', array(
+        'label_for' => 'custom_keywords',
+        'class' => 'custom_keywords ' . hidden(get_option('use_popular_tags', 1))
+    ));
     
-    add_settings_field('can_cache', 'Readers can cache feed', function () {
-        ?>
-        <style>
-        <?php include('admin/css/slider-round.css') ?>
-        </style>
-        <input type="hidden" name="can_cache" value="0" />
-        <label class="switch">
-            <input type="checkbox" name="can_cache" value="1" <?php checked(get_option('can_cache'), '1') ?> />
-            <div class="slider round" />
-        </label>
-        <?php
+    add_settings_field('use_default_cache', 'Use default cache settings', function () {
+        onoff_switch('use_default_cache', 'cache_settings');
+    }, 'connectedweb', 'connectedweb-cache', array(
+        'label_for' => 'use_default_cache'
+    ));
 
-    }, 'connectedweb', 'connectedweb-cache', array('laber_for' => 'can_cache'));
+    add_settings_field('can_cache', 'Readers can cache feed', function () {
+        onoff_switch('can_cache', 'null');
+    }, 'connectedweb', 'connectedweb-cache', array(
+        'label_for' => 'can_cache',
+        'class' => 'cache_settings ' . hidden(get_option('use_default_cache', 1))
+    ));
     
     add_settings_field('cache_expire_milliseconds', 'Expire time of the cached feed (in milliseconds)', function () {
         ?>
-        <input type="number" name="cache_expire_milliseconds" value="<?php echo esc_attr(get_option('cache_expire_milliseconds')); ?>" min='60000' step='1000' required />
+        <input type="number" name="cache_expire_milliseconds" 
+                min='60000' step='1000'
+                required value="<?php echo esc_attr(get_option('cache_expire_milliseconds')); ?>" />
         <?php
 
-    }, 'connectedweb', 'connectedweb-cache', array('laber_for' => 'cache_expire_milliseconds'));
+    }, 'connectedweb', 'connectedweb-cache', array(
+        'label_for' => 'cache_expire_milliseconds',
+        'class' => 'cache_settings ' . hidden(get_option('use_default_cache', 1))
+    ));
 });
 
 add_action('admin_menu', function () {

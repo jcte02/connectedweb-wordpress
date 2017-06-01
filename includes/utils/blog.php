@@ -50,15 +50,32 @@ function get_most_popular_tags($n)
         'order' => 'DESC'
     ));
 
-    $return = array();
-
-    foreach ($tags as $tag) {
-        $return[$tag->name] = $tag->count;
-    }
-
-    return array_map(function ($tag) {
+    $return = array_map(function ($tag) {
         return $tag->name;
     }, $tags);
+
+    return implode(', ', $return);
+}
+
+function get_keywords()
+{
+    return get_option('use_popular_tags', 1) ? get_most_popular_tags(5) : get_option('custom_keywords');
+}
+
+function get_cache_settings()
+{
+    if (get_option('use_default_cache', 1)) {
+        $cacheable = 1;
+        $expiresAfter = 3600000;
+    } else {
+        $cacheable = get_option('can_cache');
+        $expiresAfter = get_option('cache_expire_milliseconds');
+    }
+
+    return array(
+        'cacheable' => $cacheable,
+        'expiresAfter' => $expiresAfter
+    );
 }
 
 function get_blog_meta($callback = false, $not = array())
@@ -66,16 +83,13 @@ function get_blog_meta($callback = false, $not = array())
     $data = array(
         'name' => get_bloginfo('name'),
         'description' => get_bloginfo('description'),
-        'keywords' => get_option('blog_keywords', implode(', ', get_most_popular_tags(5))),
+        'keywords' => get_keywords(),
         'url' => get_bloginfo('url'),
         'source' => get_feed_link('connectedweb/source'),
         'language' => get_bloginfo('language'),
         'img' => get_blog_logo(),
         'cover' => get_blog_header(),
-        'cache' => array(
-            'cacheable' => get_option('can_cache', 1),
-            'expiresAfter' => get_option('cache_expire_milliseconds', 3600000)
-        )
+        'cache' => get_cache_settings()
     );
 
     foreach ($not as $key) {
