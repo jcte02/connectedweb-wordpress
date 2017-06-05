@@ -41,7 +41,7 @@ function tokenize_attributes($str)
     $reAttribute = '/\s?(?P<key>\w+)\=\"(?P<values>[^\"]+)\"/';
     preg_match_all($reAttribute, $str, $matches, PREG_SET_ORDER);
 
-    $attibutes = array();
+    $attributes = array();
                 
     foreach ($matches as $match) {
         $attributes[$match['key']] = explode(' ', $match['values']);
@@ -63,9 +63,10 @@ function tokenize($content)
 
     $tokens = array();
 
-    foreach ($matches as $match) {
+    foreach ($matches as $key => $match) {
         $tokens[] = array(
-            'node' => $match[0],
+            'id' => $key,
+            // 'node' => $match[0],
             'tag' => tag_type($match),
             'tagname' => $match['tagname'],
             'attributes' => tokenize_attributes($match['attributes']),
@@ -74,4 +75,37 @@ function tokenize($content)
     }
 
     return $tokens;
+}
+
+function ast($tokens)
+{
+    $tree = array_merge(
+        array(
+            'root' => array(
+                'childrens' => array()
+            )
+        ),
+    $tokens);
+
+    $parent = new SplStack();
+    $parent->push('root');
+
+    foreach ($tokens as $key => $token) {
+        switch ($token['tag']) {
+            case 'open':
+                $tree[$key]['parent'] = $parent->top();
+                $tree[$parent->top()]['childrens'][] = &$tree[$key];
+                $parent->push($key);
+                break;
+            case 'close':
+                $parent->pop();
+                break;
+            default:
+                $tree[$key]['parent'] = $parent->top();
+                $tree[$parent->top()]['childrens'][] = $tree[$key];
+                break;
+        }
+    }
+
+    return $tree['root']['childrens'];
 }
