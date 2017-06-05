@@ -19,6 +19,7 @@ along with ConnectedWeb.  If not, see <http://www.gnu.org/licenses/>.
 defined('ABSPATH') or die('OwO');
 
 require_once('attachment.php');
+require_once('tokenizer.php');
 
 function get_tag_for($type)
 {
@@ -111,8 +112,22 @@ function get_element($element)
     return array();
 }
 
+function showDOMNode(DOMNode $domNode)
+{
+    foreach ($domNode->childNodes as $node) {
+        print $node->nodeName."\n\n".$node->nodeValue."\n----\n";
+        if ($node->hasChildNodes()) {
+            showDOMNode($node);
+        }
+    }
+}
+
 function get_elements($post)
 {
+    // $doc = new DOMDocument();
+    // $doc->loadHTML($post->post_content);
+    // showDOMNode($doc);
+
     $content = normalize_wordpress_tags($post->post_content);
     $body = preg_split('/!\[\[\{(.*)\}\]\]/', $content, -1, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE);
     $elements = array_map('get_element', $body);
@@ -134,7 +149,9 @@ function get_content($id)
         'url' => get_permalink($id),
         'title' => $post->post_title,
         'description' => $post->post_excerpt,
-        // 'content' => $post->post_content,
+        'tokens' => tokenize($post->post_content),
+        'content' => $post->post_content,
+        'content_feed' => get_the_content_feed($id),
         'body' => get_elements($post),
         'pubDate' => intval(get_the_date('U', $id)),
         'img' => get_thumbnail($id),
