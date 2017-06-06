@@ -21,120 +21,161 @@ defined('ABSPATH') or die('OwO');
 require_once('attachment.php');
 require_once('tokenizer.php');
 
-function get_tag_for($type)
-{
-    return '![[{<'.$type.' data="$1" $2/>}]]';
-}
 
-function normalize_wordpress_tags($content)
-{
-    $image = '/<img.*wp-image-(\d+).*\/>/'; // $1=id
-    $video = '/\[video.*(https?[^"]+).*\](.*)\[\/video\]/'; // $1=url
-    $audio = '/\[audio.*(https?[^"]+).*\](.*)\[\/audio\]/'; // $1=url
-    $anchor = '/<a.*(https?[^\"]+).*>(.*)<\/a>/'; // $1=url, $2=title
-    $gallery = '/\[gallery ids="(.*)"\]/'; // $1=ids
-    $audio_playlist = '/\[playlist ids="(.*)"\]/'; // $1=ids
-    $video_playlist = '/\[playlist type="video" ids="(.*)"\]/'; // $1=ids
-    $youtube_video = '/https?:\/\/www.youtube.com\/watch\?v=([\w\d]+)/'; // $1=id
-
-    $content = preg_replace($image, get_tag_for('image'), $content);
-    $content = preg_replace($video, get_tag_for('video'), $content);
-    $content = preg_replace($audio, get_tag_for('audio'), $content);
-    $content = preg_replace($anchor, get_tag_for('anchor'), $content);
-    $content = preg_replace($gallery, get_tag_for('gallery'), $content);
-    $content = preg_replace($audio_playlist, get_tag_for('audio_playlist'), $content);
-    $content = preg_replace($video_playlist, get_tag_for('video_playlist'), $content);
-    $content = preg_replace($youtube_video, get_tag_for('youtube'), $content);
-
-    return $content;
-}
-
-function get_ids_array($match)
+function get_ids($match)
 {
     return array_map('intval', explode(',', $match));
 }
 
-function get_id_from_url($url)
+function id_from_url($url)
 {
     return attachment_url_to_postid($url) ? : url_to_postid($url);
 }
 
-function get_element($element)
+function wp_image($img)
 {
-    $parse_tag = '/<([\w-]+) data="(.+)" (.*)\/>/';
+    $id = 0;
 
-    preg_match($parse_tag, $element, $matches);
-
-    switch ($matches[1]) {
-        case 'image':
-            return get_image(intval($matches[2]));
-        case 'video':
-            return get_video(get_id_from_url($matches[2]));
-        case 'audio':
-            return get_audio(get_id_from_url($matches[2]));
-        case 'anchor':
-            $id = attachment_url_to_postid($matches[2]);
-            if ($id != 0 && get_post($id)->post_type == 'attachment') {
-                $type = get_attachment($id)['type'];
-                preg_match('/(.+)\//', $type, $mime);
-                switch ($mime[1]) {
-                    case 'audio':
-                        return get_audio($id);
-                    case 'video':
-                        return get_video($id);
-                    case 'image':
-                        return get_image($id);
-                    case 'application':
-                        return get_file($id);
-                }
-                return get_file($id);
-            } else {
-                return get_clink($matches[2], function (&$data) {
-                    $data['title'] = $matches[3];
-                });
-            }
-        case 'gallery':
-            return get_gallery(get_ids_array($matches[2]));
-        case 'audio_playlist':
-            return array('audio_playlist' => get_ids_array($matches[2]));
-        case 'video_playlist':
-            return array('video_playlist' => get_ids_array($matches[2]));
-        case 'youtube':
-            return get_clink($matches[2], function (&$data) {
-                $data['type'] = 'youtube';
-            });
-        default:
-            if (!empty($element)) {
-                return get_text($element);
-            }
-    }
-
-    return array();
-}
-
-function showDOMNode(DOMNode $domNode)
-{
-    foreach ($domNode->childNodes as $node) {
-        print $node->nodeName."\n\n".$node->nodeValue."\n----\n";
-        if ($node->hasChildNodes()) {
-            showDOMNode($node);
+    foreach ($img['attributes']['class'] as $value) {
+        if (preg_match('/wp-image-(?<id>\d+)/', $value, $match)) {
+            $id = intval($match['id']);
         }
     }
+
+    return $id;
 }
 
-function get_elements($post)
+function flatten(array $array)
 {
-    // $doc = new DOMDocument();
-    // $doc->loadHTML($post->post_content);
-    // showDOMNode($doc);
+    $return = array();
+    array_walk_recursive($array, function ($a) use (&$return) {
+        $return[] = $a;
+    });
+    return $return;
+}
 
-    $content = normalize_wordpress_tags($post->post_content);
-    $body = preg_split('/!\[\[\{(.*)\}\]\]/', $content, -1, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE);
-    $elements = array_map('get_element', $body);
+function rebuild_attributes($token)
+{
+    $return = array_map(array_map(function ($key, $values) {
+        return $key . '="' . implode(' ', $values) . '"';
+    }, array_keys($token['attributes']), $token['attributes']));
 
-    return array_values(array_filter($elements, function ($val) {
-        return !empty($val);
-    }));
+    return implode(' ', $return);
+}
+
+function rebuild_tags($token)
+{
+    if (empty($token['tag'])) {
+        return $token['plaintext'];
+    } elseif ($token['tag'] === 'inline') {
+        return '<' . $token['tagname'] . ' ' . rebuild_attributes($token) . ' />';
+    } else {
+        $return = array();
+        $return[] = '<' . $token['tagname'] . ' ' . rebuild_attributes($token) . '>';
+
+        foreach ($token['childrens'] as $child) {
+            $return[] = rebuild_tags($child);
+        }
+
+        $return[] = '</' . $token['tagname'] . '>';
+        return flatten($return);
+    }
+}
+
+function get_element($token)
+{
+    if (empty($token['plaintext'])) {
+        switch ($token['tagname']) {
+            case 'h1':
+            case 'h2':
+            case 'h3':
+                $text = get_text($token['childrens'][0]['plaintext'], function (&$data) use ($token) {
+                    $data['appearance'] = $token['tagname'];
+                });
+                return $text;
+            case 'blockquote':
+                $text = get_text($token['childrens'][0]['plaintext'], function (&$data) {
+                    $data['appearance'] = 'quote';
+                });
+                return $text;
+            case 'code':
+                $text = get_text($token['childrens'][0]['plaintext'], function (&$data) {
+                    $data['appearance'] = 'code';
+                });
+                return $text;
+
+            case 'img':
+                if (wp_image($token)) {
+                    return get_image(wp_image($token));
+                } else {
+                    return (object)array(
+                        'type' => 'image',
+                        'data' => array(
+                            'url' => $token['attributes']['src'][0],
+                            'width' => intval($token['attributes']['width'][0]),
+                            'height' => intval($token['attributes']['height'][0])
+                        )
+                    );
+                }
+            
+            case 'caption':
+                $image = get_element($token['childrens'][0]);
+                $caption = $token['childrens'][1]['plaintext'];
+                
+                $image->data['caption'] = $caption;
+                return $image;
+
+            case 'video':
+                return get_video(id_from_url($token['attributes'][0][0]));
+            case 'audio':
+                return get_video(id_from_url($token['attributes'][0][0]));
+
+            case 'a':
+                $id = id_from_url($token['attributes']['href'][0]);
+                
+                if ($id != 0 && get_post($id)->post_type == 'attachment') {
+                    $type = get_attachment($id)['type'];
+                    preg_match('/(.+)\//', $type, $mime);
+                    switch ($mime[1]) {
+                        case 'audio':
+                            return get_audio($id);
+                        case 'video':
+                            return get_video($id);
+                        case 'image':
+                            return get_image($id);
+                        case 'application':
+                            return get_file($id);
+                    }
+                    return get_file($id);
+                } else {
+                    return get_clink($matches[2], function (&$data) {
+                        $data['title'] = $matches[3];
+                    });
+                }
+
+            case 'gallery':
+                return get_gallery(get_ids($token['attributes']['ids'][0]));
+            
+            case 'playlist':
+                $type = is_null($token['attributes']['type']) ? 'audio' : 'video';
+                return array_map('get_' . $type, get_ids($token['attributes']['ids'][0]));
+            
+            case 'embed':
+                return get_clink($token['childrens'][0]['plaintext'], function (&$data) {
+                    $data['type'] = 'youtube';
+                });
+            
+            default:
+                return get_text(implode(rebuild_tags($token)));
+        }
+    } else {
+        return get_text($token['plaintext']);
+    }
+}
+
+function get_body($ast)
+{
+    return flatten(array_map('get_element', $ast));
 }
 
 function get_content($id)
@@ -142,17 +183,17 @@ function get_content($id)
     $post = get_post($id);
     $lastmodified = $post->post_modified_gmt;
 
-    $format = get_post_format($id);
-
+    // $format = get_post_format($id);
+    
     return array(
         'author' => get_author($post->author),
         'url' => get_permalink($id),
         'title' => $post->post_title,
         'description' => $post->post_excerpt,
         'tokens' => tokenize($post->post_content),
+        'ast' => ast(tokenize($post->post_content)),
         'content' => $post->post_content,
-        'content_feed' => get_the_content_feed($id),
-        'body' => get_elements($post),
+        'body' => get_body(ast(tokenize($post->post_content))),
         'pubDate' => intval(get_the_date('U', $id)),
         'img' => get_thumbnail($id),
     );

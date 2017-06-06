@@ -21,7 +21,7 @@ defined('ABSPATH') or die('OwO');
 function get_author($id = false)
 {
     // get_userdata($id);
-    return array(
+    return (object)array(
         'name' => get_the_author_meta('display_name', $id),
         'type' => get_the_author_meta('user_type', $id),
         'url' => get_the_author_meta('url', $id),
@@ -73,7 +73,7 @@ function get_text($value, $callback = false)
         $callback($data);
     }
 
-    return array(
+    return (object)array(
         'type' => 'text',
         'data' => $data
     );
@@ -105,7 +105,7 @@ function get_image_object($id)
 
 function get_image($id)
 {
-    return array(
+    return (object)array(
         'type' => 'image',
         'data' => get_image_object($id)
     );
@@ -124,7 +124,7 @@ function get_thumbnail($id)
 
 function get_video($id)
 {
-    return array(
+    return (object)array(
         'type' => 'video',
         'data' => array(
             'video' => get_attachment($id, function (&$data, $metadata, $dir) {
@@ -139,7 +139,7 @@ function get_video($id)
 
 function get_audio($id)
 {
-    return array(
+    return (object)array(
         'type' => 'audio',
         'data' => array(
             'audio' => get_attachment($id, function (&$data, $metadata, $dir) {
@@ -165,7 +165,7 @@ function get_clink($value, $callback = false)
         $callback($data);
     }
     
-    return array(
+    return (object)array(
         'type' => 'link',
         'data' => $data
     );
@@ -173,7 +173,7 @@ function get_clink($value, $callback = false)
 
 function get_file($id)
 {
-    return array(
+    return (object)array(
         'type' => 'file',
         'data' =>  get_attachment($id, function (&$data, $metadata, $dir) {
             $info = pathinfo($dir);
@@ -189,7 +189,7 @@ function get_gallery($images)
 {
     $data = array_map('get_image', $images);
 
-    return array(
+    return (object)array(
         'type' => 'gallery',
         'data' => array(
             'images' => $data
