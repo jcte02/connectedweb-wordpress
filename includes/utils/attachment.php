@@ -38,9 +38,6 @@ function get_attachment($id, $callback = false, $not = array())
     $post = get_post($id);
     $lastmodified = $post->post_modified_gmt;
 
-    // $cache = post_cache_get($id, $lastmodified);
-
-    // if (empty($cache)) {
     $data = array(
         // 'author' => get_author($post->post_author),
         'url' => wp_get_attachment_url($post->ID),
@@ -58,11 +55,7 @@ function get_attachment($id, $callback = false, $not = array())
         $callback($data, wp_get_attachment_metadata($id), get_attached_file($id));
     }
     
-    // post_cache_set($id, $lastmodified, $data);
     return $data;
-    // } else {
-    //     return $cache;
-    // }
 }
 
 function get_text($value, $callback = false)
