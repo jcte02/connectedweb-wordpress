@@ -1,6 +1,9 @@
 # connectedweb-wordpress [![GitHub (pre-)release](https://img.shields.io/github/release/jcte02/connectedweb-wordpress/all.svg)]()
 A WordPress plugin to provide Connected Web feed for your blog.
 
+You can manually access the Connected Web feed by appending the following string to your blog main page url:
+>/feed/connectedweb
+
 For more information on Connected Web: [http://connectedweb.org/it/docs/v1.1/](http://connectedweb.org/it/docs/v1.1/)
 
 ## Install
