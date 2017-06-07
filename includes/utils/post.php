@@ -106,21 +106,18 @@ function get_element($token)
             case 'h1':
             case 'h2':
             case 'h3':
-                $text = get_text_safe($token['childrens'][0]['plaintext'], function (&$data) use ($token) {
+                return get_text_safe($token['childrens'][0]['plaintext'], function (&$data) use ($token) {
                     $data['appearance'] = $token['tagname'];
                 });
-                return $text;
             case 'blockquote':
-                $text = get_text_safe($token['childrens'][0]['plaintext'], function (&$data) {
+                return get_text_safe($token['childrens'][0]['plaintext'], function (&$data) {
                     $data['appearance'] = 'quote';
                 });
-                return $text;
             case 'pre':
             case 'code':
-                $text = get_text_safe($token['childrens'][0]['plaintext'], function (&$data) {
+                return get_text_safe($token['childrens'][0]['plaintext'], function (&$data) {
                     $data['appearance'] = 'code';
                 });
-                return $text;
 
             case 'img':
                 if (wp_image($token)) {
@@ -179,8 +176,10 @@ function get_element($token)
                 return array_map('get_' . $type, get_ids($token['attributes']['ids'][0]));
             
             case 'embed':
-                return get_clink($token['childrens'][0]['plaintext'], function (&$data) {
-                    $data['type'] = 'youtube';
+                $url = $token['childrens'][0]['plaintext'];
+                preg_match('/^https?:\/\/w*\.?(?P<domain>[\w\d]+)\./', $url, $match);
+                return get_clink($url, function (&$data) use ($match) {
+                    $data['type'] = $match['domain'];
                 });
             
             default:
