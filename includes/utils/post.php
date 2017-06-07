@@ -63,6 +63,11 @@ function rebuild_attributes($token)
         return $key . '="' . implode(' ', $values) . '"';
     }, array_keys($token['attributes']), $token['attributes']));
 
+    if (count($return) > 1) {
+        array_unshift($return, ' ');
+        $return[] = ' ';
+    }
+
     return implode(' ', $return);
 }
 
@@ -71,10 +76,10 @@ function rebuild_tags($token)
     if (empty($token['tag'])) {
         return $token['plaintext'];
     } elseif ($token['tag'] === 'inline') {
-        return '<' . $token['tagname'] . ' ' . rebuild_attributes($token) . ' />';
+        return '<' . $token['tagname'] . rebuild_attributes($token) . '/>';
     } else {
         $return = array();
-        $return[] = '<' . $token['tagname'] . ' ' . rebuild_attributes($token) . '>';
+        $return[] = '<' . $token['tagname'] . rebuild_attributes($token) . '>';
 
         foreach ($token['childrens'] as $child) {
             $return[] = rebuild_tags($child);
@@ -85,6 +90,15 @@ function rebuild_tags($token)
     }
 }
 
+function get_text_safe($value, $callback=false)
+{
+    $text = trim($value);
+
+    if (!empty($text)) {
+        return get_text($text, $callback);
+    }
+}
+
 function get_element($token)
 {
     if (empty($token['plaintext'])) {
@@ -92,17 +106,18 @@ function get_element($token)
             case 'h1':
             case 'h2':
             case 'h3':
-                $text = get_text($token['childrens'][0]['plaintext'], function (&$data) use ($token) {
+                $text = get_text_safe($token['childrens'][0]['plaintext'], function (&$data) use ($token) {
                     $data['appearance'] = $token['tagname'];
                 });
                 return $text;
             case 'blockquote':
-                $text = get_text($token['childrens'][0]['plaintext'], function (&$data) {
+                $text = get_text_safe($token['childrens'][0]['plaintext'], function (&$data) {
                     $data['appearance'] = 'quote';
                 });
                 return $text;
+            case 'pre':
             case 'code':
-                $text = get_text($token['childrens'][0]['plaintext'], function (&$data) {
+                $text = get_text_safe($token['childrens'][0]['plaintext'], function (&$data) {
                     $data['appearance'] = 'code';
                 });
                 return $text;
@@ -169,16 +184,51 @@ function get_element($token)
                 });
             
             default:
-                return get_text(implode(rebuild_tags($token)));
+                return get_text_safe(implode(rebuild_tags($token)));
         }
     } else {
-        return get_text($token['plaintext']);
+        return get_text_safe($token['plaintext']);
     }
 }
 
 function get_body($ast)
 {
-    return flatten(array_map('get_element', $ast));
+    $return = array();
+
+    foreach ($ast as $token) {
+        $element = get_element($token);
+
+        if (!is_null($element)) {
+            if (is_array($element)) {
+                array_merge($return, $element);
+            } else {
+                if ($element->type == 'text') {
+                    if ($element->data['appearance'] == '') {
+                        while ($pos = strpos($element->data['value'], "\n")) {
+                            $text = $element->data['value'];
+                        
+                            $str1 = substr($text, 0, $pos);
+                            $str2 = substr($text, $pos);
+
+                            $return[] = get_text_safe($str1);
+
+                            $element = get_text_safe($str2);
+                            $split = true;
+                        }
+                    }
+                    if (end($return)->type == 'text' && $element->data['appearance'] == end($return)->data['appearance'] && !$split) {
+                        end($return)->data['value'] .= $element->data['value'];
+                    } else {
+                        $return[] = $element;
+                    }
+                } else {
+                    $return[] = $element;
+                }
+            }
+        }
+    }
+
+    return $return;
 }
 
 function get_content($id)
