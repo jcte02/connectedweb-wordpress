@@ -10,6 +10,8 @@ For more information on Connected Web: [http://connectedweb.org/it/docs/v1.1/](h
 
 2. Rename the folder to `connectedweb`.
 
+3. Activate the plugin from the admin panel.
+
 ## How to use
 TODO: wiki
 
