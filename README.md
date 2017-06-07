@@ -5,7 +5,8 @@ For more information on Connected Web: [http://connectedweb.org/it/docs/v1.1/](h
 
 ## Install
 Clone this repository in your `plugins/` folder.
->`git clone https://github.com/jcte02/connectedweb-wordpress.git`
+
+`git clone https://github.com/jcte02/connectedweb-wordpress.git`
 
 **OR**
 
