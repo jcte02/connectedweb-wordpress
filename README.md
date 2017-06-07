@@ -4,14 +4,11 @@ A WordPress plugin to provide Connected Web feed for your blog.
 For more information on Connected Web: [http://connectedweb.org/it/docs/v1.1/](http://connectedweb.org/it/docs/v1.1/)
 
 ## Install
-Clone this repository in your `plugins/` folder.
+1. Get the code
+   * Clone this repository in your `plugins/` folder.
+   * **OR** Grab the last release [here](https://github.com/jcte02/connectedweb-wordpress/archive/v0.1.0.zip) and unzip it into the `plugins/` folder.
 
-`git clone https://github.com/jcte02/connectedweb-wordpress.git`
-
-**OR**
-
-Grab the last release [here](https://github.com/jcte02/connectedweb-wordpress/archive/v0.1.0.zip) and unzip it into the `plugins/` folder.
-
+2. Rename the folder to `connectedweb`.
 
 ## How to use
 TODO: wiki
