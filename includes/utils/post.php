@@ -73,19 +73,42 @@ function rebuild_attributes($token)
 
 function rebuild_tags($token)
 {
+    switch ($token['tag']) {
+        case 'b':
+        case 'strong':
+        case 'br':
+        case 'i':
+        case 'a':
+        case 'em':
+        case 'ul':
+        case 'ol':
+        case 'li':
+        case 'strike':
+        case 'del':
+            $valid = true;
+        default:
+            $valid = false;
+    }
+
     if (empty($token['tag'])) {
         return $token['plaintext'];
     } elseif ($token['tag'] === 'inline') {
-        return '<' . $token['tagname'] . rebuild_attributes($token) . '/>';
+        if ($valid) {
+            return '<' . $token['tagname'] . rebuild_attributes($token) . '/>';
+        }
     } else {
         $return = array();
-        $return[] = '<' . $token['tagname'] . rebuild_attributes($token) . '>';
+        if ($valid) {
+            $return[] = '<' . $token['tagname'] . rebuild_attributes($token) . '>';
+        }
 
         foreach ($token['childrens'] as $child) {
             $return[] = rebuild_tags($child);
         }
 
-        $return[] = '</' . $token['tagname'] . '>';
+        if ($valid) {
+            $return[] = '</' . $token['tagname'] . '>';
+        }
         return flatten($return);
     }
 }
@@ -118,6 +141,8 @@ function get_element($token)
                 return get_text_safe($token['childrens'][0]['plaintext'], function (&$data) {
                     $data['appearance'] = 'code';
                 });
+            case 'p':
+                return get_text_safe($token['childrens'][0]['plaintext']);
 
             case 'img':
                 if (wp_image($token)) {
@@ -181,7 +206,7 @@ function get_element($token)
                 return get_clink($url, function (&$data) use ($match) {
                     $data['type'] = $match['domain'];
                 });
-            
+                        
             default:
                 return get_text_safe(implode(rebuild_tags($token)));
         }
