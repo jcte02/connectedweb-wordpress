@@ -143,7 +143,6 @@ function get_element($token)
                 });
             case 'p':
                 return get_text_safe($token['childrens'][0]['plaintext']);
-
             case 'img':
                 if (wp_image($token)) {
                     return get_image(wp_image($token));
