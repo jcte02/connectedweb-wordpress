@@ -30,11 +30,6 @@ function get_ids($match)
     return array_map('intval', explode(',', $match));
 }
 
-function id_from_url($url)
-{
-    return attachment_url_to_postid($url) ? : url_to_postid($url);
-}
-
 function wp_image($img)
 {
     $id = 0;
@@ -59,21 +54,25 @@ function flatten(array $array)
 
 function rebuild_attributes($token)
 {
-    $return = array_map(array_map(function ($key, $values) {
-        return $key . '="' . implode(' ', $values) . '"';
-    }, array_keys($token['attributes']), $token['attributes']));
-
-    if (count($return) > 1) {
-        array_unshift($return, ' ');
-        $return[] = ' ';
+    if (count($token['attributes']) > 1) {
+        $return = array_map(array_map(function ($key, $values) {
+            return $key . '="' . implode(' ', $values) . '"';
+        }, array_keys($token['attributes']), $token['attributes']));
+        
+        if (count($return) > 1) {
+            array_unshift($return, ' ');
+            $return[] = ' ';
+        }
+        
+        return implode(' ', $return);
     }
 
-    return implode(' ', $return);
+    return '';
 }
 
 function rebuild_tags($token)
 {
-    switch ($token['tag']) {
+    switch ($token['tagname']) {
         case 'b':
         case 'strong':
         case 'br':
@@ -86,8 +85,10 @@ function rebuild_tags($token)
         case 'strike':
         case 'del':
             $valid = true;
+            break;
         default:
             $valid = false;
+            break;
     }
 
     if (empty($token['tag'])) {
@@ -113,6 +114,17 @@ function rebuild_tags($token)
     }
 }
 
+function rebuild_childs($arr)
+{
+    $return = array();
+
+    foreach ($arr as $child) {
+        $return[] = rebuild_tags($child);
+    }
+
+    return flatten($return);
+}
+
 function get_text_safe($value, $callback=false)
 {
     $text = trim($value);
@@ -129,20 +141,20 @@ function get_element($token)
             case 'h1':
             case 'h2':
             case 'h3':
-                return get_text_safe($token['childrens'][0]['plaintext'], function (&$data) use ($token) {
+                return get_text_safe(implode(rebuild_childs($token['childrens'])), function (&$data) use ($token) {
                     $data['appearance'] = $token['tagname'];
                 });
             case 'blockquote':
-                return get_text_safe($token['childrens'][0]['plaintext'], function (&$data) {
+                return get_text_safe(implode(rebuild_childs($token['childrens'])), function (&$data) {
                     $data['appearance'] = 'quote';
                 });
             case 'pre':
             case 'code':
-                return get_text_safe($token['childrens'][0]['plaintext'], function (&$data) {
+                return get_text_safe(implode(rebuild_childs($token['childrens'])), function (&$data) {
                     $data['appearance'] = 'code';
                 });
             case 'p':
-                return get_text_safe($token['childrens'][0]['plaintext']);
+                return get_text_safe(implode(rebuild_childs($token['childrens'])));
             case 'img':
                 if (wp_image($token)) {
                     return get_image(wp_image($token));
