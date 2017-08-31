@@ -4,9 +4,9 @@
  * @version 0.1.0
  */
 /*
-Plugin Name: connectedweb
+Plugin Name: Connected Web
 Plugin URI: https://connectedweb.org
-Description: Add Connected Web functionality to your Wordpress blog.
+Description: Add Connected Web feed support to your Wordpress website
 Version: 0.1.0
 Author: Fabio Endrizzi (jcte02)
 License: GPLv3 or later
