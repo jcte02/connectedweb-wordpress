@@ -39,8 +39,13 @@ function get_blog_header()
     if (!has_header_image()) {
         return false;
     }
+    
+    $header = get_custom_header();
+    $id = $header->attachment_id ? : id_from_url($header->url);
 
-    $id = get_custom_header()->attachment_id;
+    if (empty($id)) {
+        return false;
+    }
 
     return get_image_object($id);
 }

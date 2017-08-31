@@ -21,6 +21,11 @@ along with connectedweb.  If not, see <http://www.gnu.org/licenses/>.
 
 defined('ABSPATH') or die('OwO');
 
+function id_from_url($url)
+{
+    return attachment_url_to_postid($url) ? : url_to_postid($url);
+}
+
 function get_author($id = false)
 {
     // get_userdata($id);
