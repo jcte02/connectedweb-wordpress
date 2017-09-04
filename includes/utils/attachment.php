@@ -66,7 +66,7 @@ function get_attachment($id, $callback = false, $not = array())
 function get_text($value, $callback = false)
 {
     $data = array(
-        'value' => $value,
+        'value' => preg_replace("/(\\r)?\\n/", "<br>", $value),
         'appearance' => '',
     );
     
