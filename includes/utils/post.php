@@ -125,7 +125,7 @@ function rebuild_childs($arr)
     return flatten($return);
 }
 
-function get_text_safe($value, $callback=false)
+function get_text_safe($value, $callback = false)
 {
     $text = trim($value);
 
@@ -179,7 +179,7 @@ function get_element($token)
             case 'video':
                 return get_video(id_from_url($token['attributes'][0][0]));
             case 'audio':
-                return get_video(id_from_url($token['attributes'][0][0]));
+                return get_audio(id_from_url($token['attributes'][0][0]));
 
             case 'a':
                 $id = id_from_url($token['attributes']['href'][0]);
@@ -204,7 +204,7 @@ function get_element($token)
                     });
                 }
 
-            case 'gallery':
+                case 'gallery':
                 return get_gallery(get_ids($token['attributes']['ids'][0]));
             
             case 'playlist':
