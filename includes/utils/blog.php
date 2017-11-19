@@ -22,32 +22,40 @@ along with connectedweb.  If not, see <http://www.gnu.org/licenses/>.
 defined('ABSPATH') or die('OwO');
 
 require_once('attachment.php');
+require_once('../connectedweb/connectedweb.php');
+
 
 function get_blog_logo()
 {
-    if (!has_custom_logo()) {
-        return false;
+    if (has_custom_logo()) {
+        $id = get_theme_mod('custom_logo');
+        return new ImageObject(get_image_object($id));
     }
 
-    $id = get_theme_mod('custom_logo');
-    
-    return get_image_object($id);
+    return null;
 }
 
 function get_blog_header()
 {
-    if (!has_header_image()) {
-        return false;
-    }
-    
-    $header = get_custom_header();
-    $id = $header->attachment_id ? : id_from_url($header->url);
+    $url = get_header_image();
 
-    if (empty($id)) {
-        return false;
+    if ($url) {
+        if ($id = id_from_url($url)) {
+            $params = get_image_object($id);
+        } else {
+            $header = get_custom_header();
+            $params = array(
+                'url' => $header->url,
+                'width' => $header->width,
+                'height' => $header->height,
+                'caption' => $header->description
+            );
+        }
+
+        return new ImageObject($params);
     }
 
-    return get_image_object($id);
+    return null;
 }
 
 function get_most_popular_tags($n)
@@ -80,13 +88,13 @@ function get_cache_settings()
         $expiresAfter = get_option('cache_expire_milliseconds');
     }
 
-    return array(
+    return new Cache([
         'cacheable' => $cacheable,
         'expiresAfter' => $expiresAfter
-    );
+    ]);
 }
 
-function get_blog_meta($callback = false, $not = array())
+function get_blog_meta($not = array())
 {
     $data = array(
         'name' => get_bloginfo('name'),
@@ -104,31 +112,15 @@ function get_blog_meta($callback = false, $not = array())
         unset($data[$key]);
     }
 
-    if (is_callable($callback)) {
-        $callback($data);
-    }
-    
     return $data;
 }
 
 function get_blog_source()
 {
-    return get_blog_meta(function (&$data) {
-        $data['type'] = 'source';
-        $data['cwversion'] = 1.1;
-    }, ['source', 'cache']);
+    return get_blog_meta(['source', 'cache']);
 }
 
-function get_blog_feed($callback = false)
+function get_blog_feed()
 {
-    $data = get_blog_meta(function (&$data) {
-        $data['type'] = 'feed';
-        $data['cwversion'] = 1.1;
-    }, ['url', 'img', 'cover']);
-
-    if (is_callable($callback)) {
-        $callback($data);
-    }
-
-    return $data;
+    return get_blog_meta(['url', 'img', 'cover']);
 }

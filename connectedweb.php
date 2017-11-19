@@ -1,7 +1,10 @@
 <?php
 /**
- * @package connectedweb
+ * @package connectedweb/wordpress
  * @version 0.1.0
+ * @author Fabio Endrizzi
+ * @copyright 2017 Fabio Endrizzi
+ * @license GPL3
  */
 /*
 Plugin Name: Connected Web
@@ -12,33 +15,32 @@ Author: Fabio Endrizzi (jcte02)
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
-connectedweb
+connectedweb/wordpress
 Copyright (C) 2017  Fabio Endrizzi (jcte02)
 
-This file is part of connectedweb.
+This file is part of connectedweb/wordpress.
 
-connectedweb is free software: you can redistribute it and/or modify
+connectedweb/wordpress is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-connectedweb is distributed in the hope that it will be useful,
+connectedweb/wordpress is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with connectedweb.  If not, see <http://www.gnu.org/licenses/>.
+along with connectedweb/wordpress.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 defined('ABSPATH') or die('OwO');
 
 add_action('wp_head', function () {
     ?>
-    <link rel="alternate" type="application/connectedweb+jsonp" 
+    <link rel="alternate" type="application/connectedweb+jsonp"
     title="<?php echo get_bloginfo('name') ?>" href="<?php echo get_feed_link('connectedweb') ?>" />
     <?php
-
 });
 
 add_action('init', 'connectedweb_register_feed');
@@ -64,7 +66,7 @@ register_deactivation_hook(__FILE__, function () {
     unregister_setting('connectedweb', 'use_default_cache');
     unregister_setting('connectedweb', 'can_cache');
     unregister_setting('connectedweb', 'cache_expire_milliseconds');
-    
+
     flush_rewrite_rules();
 });
 
@@ -115,7 +117,7 @@ add_action('admin_init', function () {
         'sanitize_callback' => 'intval',
         'default' => 1
     ));
-    
+
     register_setting('connectedweb', 'cache_expire_milliseconds', array(
         'type' => 'int',
         'description' => 'Expire time of the cache (in milliseconds)',
@@ -125,7 +127,7 @@ add_action('admin_init', function () {
 
     add_settings_section('connectedweb-feed', 'Feed Settings', function () {
     }, 'connectedweb');
-    
+
     add_settings_section('connectedweb-cache', 'Cache Settings', function () {
     }, 'connectedweb');
 
@@ -138,16 +140,15 @@ add_action('admin_init', function () {
     add_settings_field('custom_keywords', 'Custom keywords (separated by comma)', function () {
         ?>
         <input type="text" name="custom_keywords" id="custom_keywords"
-                pattern="(\w{3,},?\s?){1,5}" 
-                value="<?php echo esc_attr(get_option('custom_keywords')); ?>" 
+                pattern="(\w{3,},?\s?){1,5}"
+                value="<?php echo esc_attr(get_option('custom_keywords')); ?>"
                 <?php required(get_option('use_popular_tags', 1)) ?> />
         <?php
-
     }, 'connectedweb', 'connectedweb-feed', array(
         'label_for' => 'custom_keywords',
         'class' => 'custom_keywords ' . hidden(get_option('use_popular_tags', 1))
     ));
-    
+
     add_settings_field('use_default_cache', 'Use default cache settings', function () {
         onoff_switch('use_default_cache', 'cache_settings');
     }, 'connectedweb', 'connectedweb-cache', array(
@@ -160,14 +161,13 @@ add_action('admin_init', function () {
         'label_for' => 'can_cache',
         'class' => 'cache_settings ' . hidden(get_option('use_default_cache', 1))
     ));
-    
+
     add_settings_field('cache_expire_milliseconds', 'Expire time of the cached feed (in milliseconds)', function () {
         ?>
-        <input type="number" name="cache_expire_milliseconds" 
+        <input type="number" name="cache_expire_milliseconds"
                 min='60000' step='1000'
                 required value="<?php echo esc_attr(get_option('cache_expire_milliseconds')); ?>" />
         <?php
-
     }, 'connectedweb', 'connectedweb-cache', array(
         'label_for' => 'cache_expire_milliseconds',
         'class' => 'cache_settings ' . hidden(get_option('use_default_cache', 1))
@@ -189,7 +189,6 @@ add_action('admin_menu', function () {
             </form>
         </div>
         <?php
-
     });
 });
 

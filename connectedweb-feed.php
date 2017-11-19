@@ -25,14 +25,17 @@ include('includes/output/header.php');
 
 require_once('includes/utils/blog.php');
 require_once('includes/utils/post.php');
+require_once('includes/connectedweb/connectedweb.php');
 
-$feed = get_blog_feed(function (&$feed) {
-    while (have_posts()) {
-        the_post();
-        $feed['contents'][] = get_content(get_the_ID());
-    }
-});
+$feed = new Feed(get_blog_feed());
+$contents = [];
 
+while (have_posts()) {
+    the_post();
+    $contents[] = get_content(get_the_ID());
+}
+
+$feed->contents = $contents;
 $json = encode($feed);
 
 include('includes/output/json_output.php');

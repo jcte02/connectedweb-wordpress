@@ -23,8 +23,9 @@ defined('ABSPATH') or die('OwO');
 
 include('includes/output/header.php');
 require_once('includes/utils/blog.php');
+require_once('includes/connectedweb/connectedweb.php');
 
-$source = get_blog_source();
+$source = new Source(get_blog_source());
 
 $json = encode($source);
 

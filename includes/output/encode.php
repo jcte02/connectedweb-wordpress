@@ -21,22 +21,7 @@ along with connectedweb.  If not, see <http://www.gnu.org/licenses/>.
 
 defined('ABSPATH') or die('OwO');
 
-function filter($obj)
-{
-    $obj = array_map(function ($child) {
-        if (is_array($child)) {
-            return filter($child);
-        } else {
-            return $child;
-        }
-    }, (array) $obj);
-    
-    return array_filter((array) $obj, function ($value) {
-        return !empty($value);
-    });
-}
-
 function encode($obj)
 {
-    return json_encode(filter($obj), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+    return json_encode($obj, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 }
