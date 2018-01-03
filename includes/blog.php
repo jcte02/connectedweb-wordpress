@@ -22,7 +22,7 @@ along with connectedweb.  If not, see <http://www.gnu.org/licenses/>.
 defined('ABSPATH') or die('OwO');
 
 require_once('attachment.php');
-require_once('../connectedweb/connectedweb.php');
+require_once('connectedweb/connectedweb.php');
 
 
 function get_blog_logo()
@@ -97,9 +97,9 @@ function get_cache_settings()
 function get_blog_meta($not = array())
 {
     $data = array(
-        'name' => get_bloginfo('name'),
-        'description' => get_bloginfo('description'),
-        'keywords' => get_keywords(),
+        'name' => html_entity_decode(get_bloginfo('name')),
+        'description' => html_entity_decode(get_bloginfo('description')),
+        'keywords' => html_entity_decode(get_keywords()),
         'url' => get_bloginfo('url'),
         'source' => get_feed_link('connectedweb/source'),
         'language' => get_bloginfo('language'),

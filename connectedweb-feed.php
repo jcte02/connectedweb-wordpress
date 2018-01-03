@@ -23,8 +23,8 @@ defined('ABSPATH') or die('OwO');
 
 include('includes/output/header.php');
 
-require_once('includes/utils/blog.php');
-require_once('includes/utils/post.php');
+require_once('includes/blog.php');
+require_once('includes/post.php');
 require_once('includes/connectedweb/connectedweb.php');
 
 $feed = new Feed(get_blog_feed());

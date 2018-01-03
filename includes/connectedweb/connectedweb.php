@@ -30,7 +30,7 @@ class CwebObject implements JsonSerializable
     {
         foreach ($this->parameters as $param) {
             $value = $this->$param;
-            if (isset($value)) {
+            if (isset($value) && !empty($value)) {
                 $arr[$param] = $value;
             }
         }

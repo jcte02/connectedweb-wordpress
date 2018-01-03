@@ -20,7 +20,7 @@ along with connectedweb.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 defined('ABSPATH') or die('OwO');
-require_once('../connectedweb/connectedweb.php');
+require_once('connectedweb/connectedweb.php');
 
 function id_from_url($url)
 {

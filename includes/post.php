@@ -22,8 +22,8 @@ along with connectedweb.  If not, see <http://www.gnu.org/licenses/>.
 defined('ABSPATH') or die('OwO');
 
 require_once('attachment.php');
-require_once('../connectedweb/connectedweb.php');
-require_once('../connectedweb/DomWalker.php');
+require_once('connectedweb/connectedweb.php');
+require_once('connectedweb/DomWalker.php');
 
 // function get_ids($match)
 // {

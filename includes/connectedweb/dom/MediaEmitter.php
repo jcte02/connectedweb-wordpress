@@ -1,6 +1,6 @@
 <?php
 
-require_once '../connectedweb.php';
+// require_once 'connectedweb.php';
 
 class MediaEmitter
 {

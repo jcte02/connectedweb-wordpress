@@ -33,13 +33,18 @@ class TextEmitter
         $this->dom = $dom;
     }
 
+    public function isAlphaText()
+    {
+        return isset($this->value) && !empty(trim(html_entity_decode($this->value)));
+    }
+
     public function flush()
     {
-        if (isset($this->value) && trim($this->value) != "") {
+        if ($this->isAlphaText()) {
             $this->dom->insert(
-                    new Text(
-                        [
-                        'value' => trim($this->value),
+                new Text(
+                    [
+                        'value' => trim(html_entity_decode($this->value)),
                         'appearance' => $this->appearance
                     ]
                 )
@@ -55,7 +60,7 @@ class TextEmitter
 
         if (is_null($appearance) && isset($this->appearance)) {
             // p inside a block
-            if (!empty($this->value)) {
+            if ($this->isAlphaText()) {
                 // emulate paragraph inside block
                 $this->opentag('br');
                 $this->opentag('br');
@@ -82,7 +87,7 @@ class TextEmitter
 
     public function pushtext($text)
     {
-        if (!isset($this->value)) {
+        if (!$this->hasText()) {
             $this->emit('p');
         }
 
@@ -101,7 +106,7 @@ class TextEmitter
 
     public function store()
     {
-        if (isset($this->value)) {
+        if ($this->hasText()) {
             array_push($this->store, $this->appearance);
             $this->flush();
         }
