@@ -1,3 +1,5 @@
+# PROJECT WAS MOVED, SEE [connectedwebproject/wordpress](https://github.com/connectedwebproject/wordpress)
+
 # connectedweb-wordpress [![GitHub (pre-)release](https://img.shields.io/github/release/jcte02/connectedweb-wordpress/all.svg)]()
 A WordPress plugin to provide Connected Web feed for your blog.
 
